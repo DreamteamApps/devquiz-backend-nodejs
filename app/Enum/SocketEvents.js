@@ -5,6 +5,7 @@ module.exports = {
     CLIENT_ANSWER_ANSWER_PLAY_AGAIN: 'answer-play-again',
     SERVER_PLAYER_READY: 'player-ready',
     SERVER_PLAYER_JOINED: 'player-joined',
+    SERVER_PLAYER_LEAVED: 'player-leaved',
     SERVER_MATCH_START: 'match-start',
     SERVER_MATCH_START_ROUND: 'match-start-round',
     SERVER_MATCH_START_QUESTION: 'match-start-question',

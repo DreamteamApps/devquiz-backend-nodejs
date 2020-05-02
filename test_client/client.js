@@ -141,6 +141,10 @@ const matchLobbyScreen = (created) => {
     }
   });
 
+  socketClient.on('player-leaved', (data) => {
+    console.log('player-leaved', data);
+  });
+  
   inquirer.prompt([
     {
       type: 'rawlist',

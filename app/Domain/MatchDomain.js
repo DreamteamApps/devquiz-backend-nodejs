@@ -125,7 +125,7 @@ module.exports.createMatch = async (userId) => {
   const createdMatch = await Match.create({
     code: CodeGenerator.generateCode(),
     owner_id: userId,
-    status: MatchStatus.PRISTINE
+    status: MatchStatus.LOBBY
   });
 
   return {
@@ -171,7 +171,7 @@ module.exports.joinMatchWithCode = async (matchCode, userId) => {
     };
   }
 
-  if ([MatchStatus.PRISTINE, MatchStatus.ENDED].indexOf(existingMatch.status) == -1) {
+  if ([MatchStatus.LOBBY, MatchStatus.ENDED].indexOf(existingMatch.status) == -1) {
     return {
       "errorCode": 5,
       "message": "This room is already started!"
@@ -229,8 +229,8 @@ module.exports.answerQuestion = async (userId, matchId, questionId, answer, time
  *
  * @param {object} room
 */
-module.exports.disconnectUserFromMatch = async (socketId) => {
-  const user = await UserDomain.getUserBySocketId(socketId);
+module.exports.disconnectUserFromMatch = async (room) => {
+  const user = await UserDomain.getUserBySocketId(room.socketId);
   if (user) {
     UserDomain.setUserSocketId(user.id, "");
 
@@ -247,6 +247,22 @@ module.exports.disconnectUserFromMatch = async (socketId) => {
         });
 
         match.save();
+      }
+
+      if (match.status == MatchStatus.LOBBY) {
+        if (isMatchOwner) {
+          await match.delete();
+        } else {
+          match.merge({
+            opponent_isReady: false,
+            opponent_id: null
+          });
+          match.save();
+        }
+
+        room.emit(SocketEvents.SERVER_PLAYER_LEAVED, {
+          userId: user.id
+        }, match.id);
       }
     }
   }
