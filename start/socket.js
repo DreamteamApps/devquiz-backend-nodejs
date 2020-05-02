@@ -4,7 +4,7 @@
 */
 const env = use('Env')
 const Server = use('Server')
-const socketConnection = use('socket.io')(Server.getInstance(), { pingInterval: 2000, pingTimeout: 5000 });
+const socketConnection = use('socket.io')(Server.getInstance(), { pingInterval: 2000, pingTimeout: 10000 });
 
 /**
  * Domains
@@ -50,8 +50,8 @@ socketConnection.on('connection', async (connection) => {
     });
 
     room.on(SocketEvents.CLIENT_EVENT_LEAVE_MATCH, async () => {
+        await MatchDomain.disconnectUserFromMatch(room);
         room.leave();
-        MatchDomain.disconnectUserFromMatch(room);
     });
     
     room.on('disconnect', async () => {
@@ -70,14 +70,14 @@ const createRoom = async (connection) => {
         },
         emit: (eventName, data, matchId) => {
             if(!_matchId && !matchId) return;
-
-            devLog(`Emited ${eventName} to room ${_matchId || matchId}`, data ? JSON.stringify(data, null, 2) : '');
             socketConnection.to(_matchId || matchId).emit(eventName, data);
+            devLog(`Emited ${eventName} to room ${_matchId || matchId}`, data ? JSON.stringify(data, null, 2) : '');
+
         },
         on: (eventName, callback) => {
             connection.on(eventName, (data) => {
-                devLog(`Received ${eventName}`, data ? JSON.stringify(data, null, 2) : '');
                 callback(data);
+                devLog(`Received ${eventName}`, data ? JSON.stringify(data, null, 2) : '');
             });
         },
         leave: () => {

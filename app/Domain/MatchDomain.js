@@ -252,10 +252,11 @@ module.exports.disconnectUserFromMatch = async (room) => {
         }
 
         room.emit(SocketEvents.SERVER_PLAYER_LEAVED, {
-          userId: user.id
+          isMatchOwner,
+          userId: isMatchOwner ? matches[0].owner_id: matches[0].opponent_id
         }, match.id);
       }
-      
+
       if (match.status == MatchStatus.PLAYING) {
         match.merge({
           [isMatchOwner ? "owner_disconnected" : "opponent_disconnected"]: true,
