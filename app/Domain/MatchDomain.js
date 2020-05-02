@@ -240,15 +240,6 @@ module.exports.disconnectUserFromMatch = async (room) => {
       const match = await module.exports.getMatchById(matches[0].id);
       const isMatchOwner = user.id == match.owner_id;
 
-      if (match.status == MatchStatus.PLAYING) {
-        match.merge({
-          [isMatchOwner ? "owner_disconnected" : "opponent_disconnected"]: true,
-          status: MatchStatus.DISCONNECTED
-        });
-
-        match.save();
-      }
-
       if (match.status == MatchStatus.LOBBY) {
         if (isMatchOwner) {
           await match.delete();
@@ -264,6 +255,16 @@ module.exports.disconnectUserFromMatch = async (room) => {
           userId: user.id
         }, match.id);
       }
+      
+      if (match.status == MatchStatus.PLAYING) {
+        match.merge({
+          [isMatchOwner ? "owner_disconnected" : "opponent_disconnected"]: true,
+          status: MatchStatus.DISCONNECTED
+        });
+
+        match.save();
+      }
+
     }
   }
 }

@@ -31,7 +31,6 @@ socketConnection.on('connection', async (connection) => {
         MatchDomain.joinMatch(room, matchId, userId);
     });
 
-
     room.on(SocketEvents.CLIENT_EVENT_SET_READY, async (params) => {
         const { userId, matchId } = params;
 
@@ -50,6 +49,11 @@ socketConnection.on('connection', async (connection) => {
         MatchDomain.playAgainAnswer(userId, matchId);
     });
 
+    room.on(SocketEvents.CLIENT_EVENT_LEAVE_MATCH, async () => {
+        room.leave();
+        MatchDomain.disconnectUserFromMatch(room);
+    });
+    
     room.on('disconnect', async () => {
         MatchDomain.disconnectUserFromMatch(room);
     });
