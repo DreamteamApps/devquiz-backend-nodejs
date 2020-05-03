@@ -77,6 +77,8 @@ module.exports.joinMatch = async (room, matchId, userId) => {
   const matchPlayers = {};
   const getRolesPromises = [];
 
+  room.join(matchId);
+
   const match = await module.exports.getMatchById(matchId);
 
   const getOwnerPromise = await match.owner().fetch().then((owner) => matchPlayers.owner = {
@@ -253,8 +255,8 @@ module.exports.disconnectUserFromMatch = async (room) => {
 
         room.emit(SocketEvents.SERVER_PLAYER_LEAVED, {
           isMatchOwner,
-          userId: isMatchOwner ? matches[0].owner_id: matches[0].opponent_id
-        }, match.id);
+          userId: isMatchOwner ? matches[0].owner_id : matches[0].opponent_id
+        });
       }
 
       if (match.status == MatchStatus.PLAYING) {
@@ -268,6 +270,8 @@ module.exports.disconnectUserFromMatch = async (room) => {
 
     }
   }
+
+  room.leave();
 }
 
 /**

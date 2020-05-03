@@ -36,8 +36,12 @@ Route.group(() => {
  * 
 */
 Route.group(() => {
-    Route.get('create/:userId', 'MatchController.store');
+    Route.post('create', 'MatchController.store');
     Route.post('join', 'MatchController.joinMatchWithCode');
 }).prefix('match');
 
-Route.get('/users/:githubuser', 'UserController.getOrCreateUser');
+Route.group(() => {
+    Route.post('create', 'UserController.getOrCreateUser');
+    Route.get('recent', 'UserController.getRecentUsers');
+}).prefix('user');
+

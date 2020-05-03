@@ -144,7 +144,7 @@ const matchLobbyScreen = (created) => {
   socketClient.on('player-leaved', (data) => {
     console.log('player-leaved', data);
   });
-  
+
   inquirer.prompt([
     {
       type: 'rawlist',
@@ -194,29 +194,29 @@ const joinRoomScreen = () => {
       return;
     }
 
-      room = await joinRoom(response.answer);
+    room = await joinRoom(response.answer);
 
-      if (!room) {
-        inquirer
-          .prompt([
-            {
-              type: "list",
-              name: "rawlist",
-              message: `Join room failed!`,
-              choices: [`Try again!`],
-            },
-          ])
-          .then(async (response) => {
-            if (response.answer) {
-              startGame();
-            }
-          });
-        return;
-      }
+    if (!room) {
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "rawlist",
+            message: `Join room failed!`,
+            choices: [`Try again!`],
+          },
+        ])
+        .then(async (response) => {
+          if (response.answer) {
+            startGame();
+          }
+        });
+      return;
+    }
 
     if (!room) {
 
-      await promptRetry('Join room failed!', ()=> {
+      await promptRetry('Join room failed!', () => {
         startGameScreen();
       });
 
@@ -274,7 +274,7 @@ const changeUrlScreen = () => {
       return;
     }
 
-      baseUrl = response.answer;
+    baseUrl = response.answer;
 
     startGameOrChangeUrlScreen();
   });
@@ -283,7 +283,10 @@ const changeUrlScreen = () => {
 //Http methods
 const getUser = async (username) => {
   try {
-    const result = await axios.get(`${baseUrl}/users/${username}`);
+    const getUserRequest = {
+      githubuser: username,
+    };
+    const result = await axios.post(`${baseUrl}/user/create`, getUserRequest);
     return result.data;
   } catch (error) {
     console.log(JSON.stringify(error.response.data, null, 2));
@@ -293,7 +296,10 @@ const getUser = async (username) => {
 
 const createRoom = async () => {
   try {
-    const result = await axios.get(`${baseUrl}/match/create/${user.id}`);
+    const createRoomRequest = {
+      userId: user.id,
+    };
+    const result = await axios.post(`${baseUrl}/match/create`, createRoomRequest);
     return result.data;
   } catch (error) {
     console.log(JSON.stringify(error.response.data, null, 2));

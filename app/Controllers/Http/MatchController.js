@@ -16,10 +16,10 @@ class MatchController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ params, response }) {
-    const { userId } = params;
+  async store({ request, response }) {
+    const { userId, opponentId } = request.only(['userId', 'opponentId']);
 
-    const result = await MatchDomain.createMatch(userId);
+    const result = await MatchDomain.createMatch(userId, opponentId);
 
     if (!result.errorCode) {
       return result;

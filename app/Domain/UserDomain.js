@@ -1,3 +1,8 @@
+/**
+ * Models
+ * 
+*/
+const Database = use('Database')
 const User = use("App/Models/User")
 
 const GitHub = use("App/Infrastructure/Github")
@@ -7,7 +12,7 @@ const GitHub = use("App/Infrastructure/Github")
  *
  * @param {string} githubUser
 */
-module.exports.getOrCreateUser = async (githubUser) => {
+module.exports.getOrCreateUser = async (githubUser,pushToken) => {
     const { login, name, public_repos, avatar_url } = await GitHub.getUserInformation(githubUser);
 
     if (!login) {
@@ -23,13 +28,16 @@ module.exports.getOrCreateUser = async (githubUser) => {
             username: login,
             name: name || login,
             repos_quantity: public_repos,
-            image_url: avatar_url
+            image_url: avatar_url,
+            push_token: pushToken
         });
         existingUser = await User.findBy('username', login);
     } else {
         existingUser.merge({
             repos_quantity: public_repos,
-            image_url: avatar_url
+            image_url: avatar_url,
+            updated_at: new Date(),
+            push_token: pushToken
         })
         await existingUser.save();
     }
@@ -91,4 +99,20 @@ module.exports.getUserByEmail = async (email) => {
 module.exports.getUserBySocketId = async (socketId) => {
     const user = await User.findBy('socket_id', socketId);
     return user;
+}
+
+/**
+ * Gets the list of recent users in app
+ *
+*/
+module.exports.getRecentUsers = async () => {
+    const users = await Database.table('users').orderBy('updated_at', 'desc').limit(10);
+
+    return users.map((user) => {
+        return {
+            id: user.id,
+            name: user.username,
+            avatar: user.image_url
+        }
+    });
 }

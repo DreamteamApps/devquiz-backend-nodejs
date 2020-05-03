@@ -4,6 +4,7 @@ module.exports = {
     CLIENT_ANSWER_QUESTION: 'answer-question',
     CLIENT_ANSWER_ANSWER_PLAY_AGAIN: 'answer-play-again',
     CLIENT_EVENT_LEAVE_MATCH: 'leave-match',
+    CLIENT_DISCONNECT: 'disconnect',
     SERVER_PLAYER_READY: 'player-ready',
     SERVER_PLAYER_JOINED: 'player-joined',
     SERVER_PLAYER_LEAVED: 'player-leaved',
