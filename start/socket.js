@@ -23,10 +23,7 @@ const Socket = use("App/Helpers/Socket")
 socketClient.on('connection', async (connection) => {
     const room = await Socket.createRoom(socketClient, connection);
 
-    const recentPlayers = await UserDomain.getRecentUsers();
-    if(recentPlayers) {
-        socketClient.emit(SocketEvents.SERVER_RECENT_PLAYED, recentPlayers);
-    }
+    room.on(SocketEvents.CLIENT_CONNECT, () => MatchDomain.clientConnect(room));
 
     room.on(SocketEvents.CLIENT_EVENT_JOIN_MATCH, ({ matchId, userId }) => MatchDomain.joinMatch(room, matchId, userId));
 

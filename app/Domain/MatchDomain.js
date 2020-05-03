@@ -45,6 +45,16 @@ const MATCH_PLAY_AGAIN_COUNTDOWN_TIME = 5;
 */
 
 /**
+ * Emits recent played to all connected clients when a client connect
+*/
+module.exports.clientConnect = async (room) => {
+  const recentPlayers = await UserDomain.getRecentUsers();
+  if (recentPlayers) {
+    room.emitToAll(SocketEvents.SERVER_RECENT_PLAYED, recentPlayers);
+  }
+}
+
+/**
  * Set player as ready in a match
  *
  * @param {string} username

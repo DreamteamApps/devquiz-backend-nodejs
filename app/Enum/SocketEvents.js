@@ -1,4 +1,5 @@
 module.exports = {
+    CLIENT_CONNECT: 'client-connect',
     CLIENT_EVENT_JOIN_MATCH: 'join-match',
     CLIENT_EVENT_SET_READY: 'set-ready',
     CLIENT_ANSWER_QUESTION: 'answer-question',

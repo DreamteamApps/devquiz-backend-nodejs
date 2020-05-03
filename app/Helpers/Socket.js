@@ -26,6 +26,12 @@ module.exports.createRoom = async (socketClient, connection) => {
 
             Log.devLog(`Emited ${eventName} to room ${_matchId}`, data ? JSON.stringify(data, null, 2) : '');
         },
+        emitToAll: (eventName, data) => {
+
+            socketClient.emit(eventName, data);
+
+            Log.devLog(`Emited ${eventName} to all`, data ? JSON.stringify(data, null, 2) : '');
+        },
         on: (eventName, callback) => {
             connection.on(eventName, (data) => {
                 callback(data);
