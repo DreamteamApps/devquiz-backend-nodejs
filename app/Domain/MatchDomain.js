@@ -143,13 +143,16 @@ module.exports.createMatch = async (userId, opponentId) => {
 
   if (opponentId) {
     const opponent = await UserDomain.getUserById(opponentId);
-    Onesignal.sendPush([opponent.push_token], {
-      title: `${existingUser.username} challenged you on DevQuiz`,
-      message: `Click here to join!`,
-      data: {
-        matchCode: createdMatch.code
-      }
-    });
+    
+    if (opponent.push_token) {
+      Onesignal.sendPush([opponent.push_token], {
+        title: `${existingUser.username} challenged you on DevQuiz`,
+        message: `Click here to join!`,
+        data: {
+          matchCode: createdMatch.code
+        }
+      });
+    }
   }
 
   return {
