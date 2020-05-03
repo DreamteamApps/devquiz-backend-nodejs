@@ -8,8 +8,10 @@ class UserController {
   /**
    * Gets the list of recent users in app
   */
-  async getRecentUsers() {
-    const result = await UserDomain.getRecentUsers();
+  async getRecentUsers({ params }) {
+    const { userId } = params;
+
+    const result = await UserDomain.getRecentUsers(userId);
     return result;
   }
 

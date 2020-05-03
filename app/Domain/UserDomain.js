@@ -6,6 +6,8 @@ const Database = use('Database')
 const User = use("App/Models/User")
 
 const GitHub = use("App/Infrastructure/Github")
+const UserType = use('App/Enum/UserType')
+
 
 /**
  * Gets a user in github, create it or update in our database and return it
@@ -105,8 +107,8 @@ module.exports.getUserBySocketId = async (socketId) => {
  * Gets the list of recent users in app
  *
 */
-module.exports.getRecentUsers = async () => {
-    const users = await Database.table('users').orderBy('updated_at', 'desc').limit(10);
+module.exports.getRecentUsers = async (userId) => {
+    const users = await Database.table('users').where('type', UserType.USER).whereNot('id', userId).orderBy('updated_at', 'desc').limit(10);
 
     return users.map((user) => {
         return {
