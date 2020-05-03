@@ -26,8 +26,8 @@ const MatchStatus = use('App/Enum/MatchStatus')
  * Constants
  * All times are in MS
 */
-const TOTAL_ROUNDS = 5;
-const ROUND_COUNTDOWN_TIME = 5;
+const TOTAL_ROUNDS = 2;
+const ROUND_COUNTDOWN_TIME = 30;
 
 const TIME_BEFORE_START_MATCH = 1000;
 const TIME_BEFORE_START_FIRST_ROUND = 3500;
