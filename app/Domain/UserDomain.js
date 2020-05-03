@@ -14,33 +14,43 @@ const UserType = use('App/Enum/UserType')
  *
  * @param {string} githubUser
 */
-module.exports.getOrCreateUser = async (githubUser,pushToken) => {
-    const { login, name, public_repos, avatar_url } = await GitHub.getUserInformation(githubUser);
+module.exports.getOrCreateUser = async (githubUser, pushToken) => {
+    let existingUser = await User.findBy('username', githubUser);
 
-    if (!login) {
+    const { login, name, public_repos, avatar_url, etag } = await GitHub.getUserInformation(githubUser, existingUser && existingUser.github_etag);
+
+    if (!login && !existingUser) {
         return {
             "errorCode": 1,
             "message": "This user doesn't exists!"
         }
     }
 
-    let existingUser = await User.findBy('username', login);
     if (!existingUser) {
         await User.create({
             username: login,
             name: name || login,
             repos_quantity: public_repos,
             image_url: avatar_url,
-            push_token: pushToken
+            push_token: pushToken,
+            github_etag: etag
         });
+        
         existingUser = await User.findBy('username', login);
     } else {
+        if (login) {
+            existingUser.merge({
+                repos_quantity: public_repos,
+                image_url: avatar_url,
+                github_etag: etag
+            });
+        }
+        
         existingUser.merge({
-            repos_quantity: public_repos,
-            image_url: avatar_url,
-            updated_at: new Date(),
-            push_token: pushToken
-        })
+            push_token: pushToken,
+            updated_at: new Date()
+        });
+
         await existingUser.save();
     }
 

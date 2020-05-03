@@ -120,6 +120,9 @@ const createRoomScreen = async () => {
   }
 
   socketClient = socket(baseUrl);
+  
+  socketClient.emit("client-connect");
+
   socketClient.emit("join-match", {
     matchId: room.matchId,
     userId: user.id

@@ -1,10 +1,18 @@
 # Online at
- ### API - https://devquiz-backend.herokuapp.com/
- ### DOCS - https://documenter.getpostman.com/view/9069060/Szf82oH4?version=latest#25856df8-ca1d-422b-85bb-dbb6b8bd48ec
+ #### API - https://devquiz-backend.herokuapp.com/
+ #### DOCS - https://documenter.getpostman.com/view/9069060/Szf82oH4?version=latest#25856df8-ca1d-422b-85bb-dbb6b8bd48ec
+
+# To run
+#### 1 - create .env file or set your environment variables as in the .env.example
+#### 2 - npm run setup (to run migrations and seeds)
+
+# To debug
+#### 1 - npm run dev (to run migrations and seeds)
 
 # Database
-### SQLite - To use SQLITE change DB_CONNECTION in .env to sqlite
-### MySql - To use MySql change DB_CONNECTION in .env to mysql
+#### SQLite - To use SQLITE change DB_CONNECTION in .env or environment variables to sqlite
+#### MySql - To use MySql change DB_CONNECTION in .env or environment variables to mysql
+
 
 # Match sequence diagram
 ![Match sequence diagram](https://raw.githubusercontent.com/erickcouto/devquiz/master/backend/SequenceDiagram.png)
