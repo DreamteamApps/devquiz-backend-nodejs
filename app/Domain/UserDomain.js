@@ -5,6 +5,10 @@
 const Database = use('Database')
 const User = use("App/Models/User")
 
+/**
+ * General
+ * 
+*/
 const GitHub = use("App/Infrastructure/Github")
 const UserType = use('App/Enum/UserType')
 
@@ -26,6 +30,16 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
         }
     }
 
+    if (pushToken) {
+        const userWithThisPushToken = await User.findBy('push_token', pushToken);
+        if (userWithThisPushToken) {
+            userWithThisPushToken.merge({
+                push_token: null
+            });
+            await userWithThisPushToken.save();
+        }
+    }
+
     if (!existingUser) {
         await User.create({
             username: login,
@@ -35,7 +49,7 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
             push_token: pushToken,
             github_etag: etag
         });
-        
+
         existingUser = await User.findBy('username', login);
     } else {
         if (login) {
@@ -45,7 +59,7 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
                 github_etag: etag
             });
         }
-        
+
         existingUser.merge({
             push_token: pushToken,
             updated_at: new Date()

@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+const Log = use("App/Helpers/Log");
+
 /**
  * Get user public github information
  *
@@ -21,6 +23,8 @@ module.exports.getUserInformation = async (username, etag) => {
                 username: githubClientId,
                 password: githubSecret
             }
+        } else {
+            Log.devLog(`Missing Github Oauth client id or secret`);
         }
 
         if (etag) {
@@ -30,12 +34,20 @@ module.exports.getUserInformation = async (username, etag) => {
         }
 
         const response = await axios.get(`https://api.github.com/users/${username}`, options);
+        const { data } = response;
+
+        Log.devLog(`Get github user info success`, data);
 
         return {
-            ...response.data,
+            ...data,
             etag: response.headers['etag']
         };
     } catch (ex) {
+        Log.devLog(`Get github user info failed`, {
+            username,
+            error: ex.response
+        });
+        
         return {};
     }
 }

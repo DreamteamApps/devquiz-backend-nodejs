@@ -16,6 +16,7 @@ const QuestionDomain = use('App/Domain/QuestionDomain')
  * General
  * 
 */
+const Onesignal = use("App/Infrastructure/Onesignal")
 const CodeGenerator = use("App/Helpers/CodeGenerator")
 const Time = use("App/Helpers/Time")
 const SocketEvents = use('App/Enum/SocketEvents')
@@ -125,7 +126,7 @@ module.exports.joinMatch = async (room, matchId, userId) => {
  *
  * @param {integer} userId
 */
-module.exports.createMatch = async (userId) => {
+module.exports.createMatch = async (userId, opponentId) => {
   let existingUser = await UserDomain.getUserById(userId);
   if (!existingUser) {
     return {
@@ -139,6 +140,17 @@ module.exports.createMatch = async (userId) => {
     owner_id: userId,
     status: MatchStatus.LOBBY
   });
+
+  if (opponentId) {
+    const opponent = await UserDomain.getUserById(opponentId);
+    Onesignal.sendPush([opponent.push_token], {
+      title: `${existingUser.username} challenged you on DevQuiz`,
+      message: `Click here to join!`,
+      data: {
+        matchCode: createdMatch.code
+      }
+    });
+  }
 
   return {
     matchId: createdMatch.id,
