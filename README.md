@@ -2,6 +2,10 @@
  ### API - https://devquiz-backend.herokuapp.com/
  ### DOCS - https://documenter.getpostman.com/view/9069060/Szf82oH4?version=latest#25856df8-ca1d-422b-85bb-dbb6b8bd48ec
 
+# Database
+### SQLite - To use SQLITE change DB_CONNECTION in .env to sqlite
+### MySql - To use MySql change DB_CONNECTION in .env to mysql
+
 # Match sequence diagram
 ![Match sequence diagram](https://raw.githubusercontent.com/erickcouto/devquiz/master/backend/SequenceDiagram.png)
 
@@ -102,7 +106,6 @@ Joins a room
 ```
 
 # Socket events
-
 ### (client) join-match
 ```json
 {
