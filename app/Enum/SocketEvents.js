@@ -15,5 +15,6 @@ module.exports = {
     SERVER_MATCH_END_ROUND: 'match-round-end',
     SERVER_MATCH_END: 'match-end',
     SERVER_MATCH_PLAY_AGAIN_COUNTDOWN: 'play-again-countdown',
-    SERVER_MATCH_PLAY_AGAIN: 'play-again'
+    SERVER_MATCH_PLAY_AGAIN: 'play-again',
+    SERVER_RECENT_PLAYED: 'recent-played',
 };

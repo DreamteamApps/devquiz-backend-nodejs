@@ -107,8 +107,8 @@ module.exports.getUserBySocketId = async (socketId) => {
  * Gets the list of recent users in app
  *
 */
-module.exports.getRecentUsers = async (userId) => {
-    const users = await Database.table('users').where('type', UserType.USER).whereNot('id', userId).orderBy('updated_at', 'desc').limit(10);
+module.exports.getRecentUsers = async () => {
+    const users = await Database.table('users').where('type', UserType.USER).orderBy('updated_at', 'desc').limit(10);
 
     return users.map((user) => {
         return {
