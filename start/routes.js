@@ -42,5 +42,6 @@ Route.group(() => {
 
 Route.group(() => {
     Route.post('create', 'UserController.getOrCreateUser');
+    Route.get('recent', 'UserController.getRecentUsers');
 }).prefix('user');
 

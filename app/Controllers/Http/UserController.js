@@ -6,6 +6,14 @@ const UserType = use('App/Enum/UserType')
 class UserController {
 
   /**
+   * Gets the list of recent users in app
+  */
+  async getRecentUsers() {
+    const result = await UserDomain.getRecentUsers();
+    return result;
+  }
+
+  /**
    * Gets a user in github, create it or update in our database and return it
    * @param {string} githubuser
    * @param {string} pushToken
