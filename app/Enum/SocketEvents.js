@@ -1,4 +1,6 @@
 module.exports = {
+    STATISTICS_CLIENT_CONNECT: 'statistics-client-connect',
+    STATISTICS_UPDATE: 'statistics-update',
     CLIENT_CONNECT: 'client-connect',
     CLIENT_EVENT_JOIN_MATCH: 'join-match',
     CLIENT_EVENT_SET_READY: 'set-ready',

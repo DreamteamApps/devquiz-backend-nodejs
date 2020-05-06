@@ -11,6 +11,7 @@ const Match = use("App/Models/Match")
 */
 const UserDomain = use('App/Domain/UserDomain')
 const QuestionDomain = use('App/Domain/QuestionDomain')
+const StatisticsDomain = use('App/Domain/StatisticsDomain')
 
 /**
  * General
@@ -21,6 +22,7 @@ const CodeGenerator = use("App/Helpers/CodeGenerator")
 const Time = use("App/Helpers/Time")
 const SocketEvents = use('App/Enum/SocketEvents')
 const MatchStatus = use('App/Enum/MatchStatus')
+const StatisticsType = use('App/Enum/StatisticsType')
 
 
 /**
@@ -51,7 +53,10 @@ const MATCH_PLAY_AGAIN_COUNTDOWN_TIME = 5;
 module.exports.clientConnect = async (room) => {
   const recentPlayers = await UserDomain.getRecentUsers();
   if (recentPlayers) {
-    room.emitToAll(SocketEvents.SERVER_RECENT_PLAYED, recentPlayers);
+
+    StatisticsDomain.setStatisticsObject(StatisticsType.RECENT_PLAYERS, recentPlayers);
+    
+    room.emitToMatchToAll(SocketEvents.SERVER_RECENT_PLAYED, recentPlayers);
   }
 }
 
@@ -70,7 +75,7 @@ module.exports.setReady = async (room, userId, matchId) => {
 
   match.save();
 
-  room.emit(SocketEvents.SERVER_PLAYER_READY, { userId: userId });
+  room.emitToMatch(SocketEvents.SERVER_PLAYER_READY, { userId: userId });
 
   if (match.owner_isReady && match.opponent_isReady) {
     await Time.waitMS(TIME_BEFORE_START_MATCH);
@@ -88,7 +93,7 @@ module.exports.joinMatch = async (room, matchId, userId) => {
   const matchPlayers = {};
   const getRolesPromises = [];
 
-  room.join(matchId);
+  room.joinMatch(matchId);
 
   const match = await module.exports.getMatchById(matchId);
 
@@ -116,7 +121,7 @@ module.exports.joinMatch = async (room, matchId, userId) => {
 
   await Promise.all(getRolesPromises);
 
-  room.emit(SocketEvents.SERVER_PLAYER_JOINED, matchPlayers);
+  room.emitToMatch(SocketEvents.SERVER_PLAYER_JOINED, matchPlayers);
 
   UserDomain.setUserSocketId(userId, room.socketId);
 }
@@ -127,6 +132,9 @@ module.exports.joinMatch = async (room, matchId, userId) => {
  * @param {integer} userId
 */
 module.exports.createMatch = async (userId, opponentId) => {
+  
+  StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_MATCHES);
+
   let existingUser = await UserDomain.getUserById(userId);
   if (!existingUser) {
     return {
@@ -278,7 +286,7 @@ module.exports.disconnectUserFromMatch = async (room) => {
           match.save();
         }
 
-        room.emit(SocketEvents.SERVER_PLAYER_LEAVED, {
+        room.emitToMatch(SocketEvents.SERVER_PLAYER_LEAVED, {
           isMatchOwner,
           userId: isMatchOwner ? matches[0].owner_id : matches[0].opponent_id
         });
@@ -296,7 +304,7 @@ module.exports.disconnectUserFromMatch = async (room) => {
     }
   }
 
-  room.leave();
+  room.leaveMatch();
 }
 
 /**
@@ -342,7 +350,7 @@ module.exports.getMatchById = async (matchId) => {
  * @param {integer} matchId
 */
 const startMatch = async (room, matchId) => {
-  room.emit(SocketEvents.SERVER_MATCH_START);
+  room.emitToMatch(SocketEvents.SERVER_MATCH_START);
 
   await Time.waitMS(TIME_BEFORE_START_FIRST_ROUND);
 
@@ -376,11 +384,11 @@ const playNextRound = async (room, matchId) => {
 
   match.save();
 
-  room.emit(SocketEvents.SERVER_MATCH_START_ROUND, { currentRound: match.round, totalRound: TOTAL_ROUNDS });
+  room.emitToMatch(SocketEvents.SERVER_MATCH_START_ROUND, { currentRound: match.round, totalRound: TOTAL_ROUNDS });
 
   await Time.waitMS(TIME_BEFORE_SEND_QUESTION);
 
-  room.emit(SocketEvents.SERVER_MATCH_START_QUESTION, {
+  room.emitToMatch(SocketEvents.SERVER_MATCH_START_QUESTION, {
     id: question.id,
     title: question.title,
     image: question.image,
@@ -395,7 +403,7 @@ const playNextRound = async (room, matchId) => {
   let userDisconnected = false;
 
   await Time.countdownFrom(ROUND_COUNTDOWN_TIME, async (counted, stopCounting) => {
-    room.emit(SocketEvents.SERVER_MATCH_COUNTDOWN, { seconds: counted });
+    room.emitToMatch(SocketEvents.SERVER_MATCH_COUNTDOWN, { seconds: counted });
 
     match = await module.exports.getMatchById(matchId);
 
@@ -411,7 +419,7 @@ const playNextRound = async (room, matchId) => {
 
   match = await module.exports.getMatchById(matchId);
 
-  room.emit(SocketEvents.SERVER_MATCH_END_ROUND, {
+  room.emitToMatch(SocketEvents.SERVER_MATCH_END_ROUND, {
     owner: {
       id: match.owner_id,
       answer: match.owner_last_answer,
@@ -529,7 +537,7 @@ const endMatch = async (room, matchId) => {
   opponent.save();
   match.save();
 
-  room.emit(SocketEvents.SERVER_MATCH_END, {
+  room.emitToMatch(SocketEvents.SERVER_MATCH_END, {
     owner: {
       id: match.owner_id,
       score: ownerScore,
@@ -568,7 +576,7 @@ const playAgain = async (room, matchId) => {
   let newMatch;
 
   await Time.countdownFrom(MATCH_PLAY_AGAIN_COUNTDOWN_TIME, async (counted, stopCounting) => {
-    room.emit(SocketEvents.SERVER_MATCH_PLAY_AGAIN_COUNTDOWN, { seconds: counted });
+    room.emitToMatch(SocketEvents.SERVER_MATCH_PLAY_AGAIN_COUNTDOWN, { seconds: counted });
 
     match = await module.exports.getMatchById(matchId);
 
@@ -579,7 +587,7 @@ const playAgain = async (room, matchId) => {
 
   if (match.owner_play_again) {
     newMatch = await module.exports.createMatch(match.owner_id);
-    room.emit(SocketEvents.SERVER_MATCH_PLAY_AGAIN, { userId: match.owner_id, matchId: newMatch.matchId, matchCode: newMatch.matchCode });
+    room.emitToMatch(SocketEvents.SERVER_MATCH_PLAY_AGAIN, { userId: match.owner_id, matchId: newMatch.matchId, matchCode: newMatch.matchCode });
   }
 
   if (match.opponent_play_again) {
@@ -589,8 +597,8 @@ const playAgain = async (room, matchId) => {
       newMatch = await module.exports.createMatch(match.opponent_id);
     }
 
-    room.emit(SocketEvents.SERVER_MATCH_PLAY_AGAIN, { userId: match.opponent_id, matchId: newMatch.matchId, matchCode: newMatch.matchCode });
+    room.emitToMatch(SocketEvents.SERVER_MATCH_PLAY_AGAIN, { userId: match.opponent_id, matchId: newMatch.matchId, matchCode: newMatch.matchCode });
   }
 
-  room.leave();
+  room.leaveMatch();
 }

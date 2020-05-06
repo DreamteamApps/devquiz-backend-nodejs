@@ -4,27 +4,23 @@
 */
 const Log = use("App/Helpers/Log")
 
-const rooms = {};
+const connections = {};
 
-module.exports.createRoom = async (socketClient, connection) => {
+module.exports.createConnection = async (socketClient, socketConnection) => {
     let _matchId;
 
-    let room = {
-        socketId: connection.id,
+    let connection = {
+        socketId: socketConnection.id,
         matchId: () => _matchId,
-        join: (matchId) => {
-            _matchId = matchId;
-
-            connection.join(matchId);
-
-            Log.devLog(`New client connected ${connection.id}`);
+        totalConnections: () => {
+            return socketClient.engine.clientsCount;
         },
-        emit: (eventName, data) => {
-            if (!_matchId) return;
+        on: (eventName, callback) => {
+            socketConnection.on(eventName, (data) => {
+                callback(data);
 
-            socketClient.to(_matchId).emit(eventName, data);
-
-            Log.devLog(`Emited ${eventName} to room ${_matchId}`, data ? JSON.stringify(data, null, 2) : '');
+                Log.devLog(`Received ${eventName}`, data ? JSON.stringify(data, null, 2) : '');
+            });
         },
         emitToAll: (eventName, data) => {
 
@@ -32,23 +28,48 @@ module.exports.createRoom = async (socketClient, connection) => {
 
             Log.devLog(`Emited ${eventName} to all`, data ? JSON.stringify(data, null, 2) : '');
         },
-        on: (eventName, callback) => {
-            connection.on(eventName, (data) => {
-                callback(data);
+        emitToSelf: (eventName, data) => {
 
-                Log.devLog(`Received ${eventName}`, data ? JSON.stringify(data, null, 2) : '');
-            });
+            socketConnection.emit(eventName, data);
+
+            Log.devLog(`Emited ${eventName} to self`, data ? JSON.stringify(data, null, 2) : '');
         },
-        leave: () => {
+        joinMatch: (matchId) => {
+            _matchId = matchId;
+
+            socketConnection.join(matchId);
+
+            Log.devLog(`New user ${socketConnection.id} connected`);
+        },
+        emitToMatch: (eventName, data) => {
             if (!_matchId) return;
 
-            connection.leave(_matchId);
+            socketClient.to(_matchId).emit(eventName, data);
 
-            rooms[connection.id] = null;
-        }
+            Log.devLog(`Emited ${eventName} to match ${_matchId}`, data ? JSON.stringify(data, null, 2) : '');
+        },
+        leaveMatch: () => {
+            if (!_matchId) return;
+
+            socketConnection.leave(_matchId);
+
+            connections[socketConnection.id] = null;
+        },
+        subscribeStatistics: () => {
+
+            socketConnection.join('statistics');
+
+            Log.devLog(`New client ${socketConnection.id} subscribed to statistics`);
+        },
+        emitStatistics: (eventName, data) => {
+
+            socketClient.to('statistics').emit(eventName, data);
+
+            Log.devLog(`Emited ${eventName} to statistics`, data ? JSON.stringify(data, null, 2) : '');
+        },
     }
 
-    rooms[connection.id] = room;
+    connections[socketConnection.id] = connection;
 
-    return rooms[connection.id];
+    return connections[socketConnection.id];
 }
