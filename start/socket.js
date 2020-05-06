@@ -2,7 +2,6 @@
  * Server
  * 
 */
-const env = use('Env')
 const Server = use('Server')
 const socketClient = use('socket.io')(Server.getInstance(), { pingInterval: 2000, pingTimeout: 10000 });
 
