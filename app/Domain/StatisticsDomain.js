@@ -143,7 +143,10 @@ const prepareInitialData = async () => {
 
 const getTop10PlayersByWin = async () => {
     const top10PlayersByWin = await Database.table('users').where('type', UserType.USER).where('wins', '>', 0).orderBy('wins', 'desc').limit(10);
+    
     statistics[StatisticsType.TOP_10PLAYERS_BY_WIN] = top10PlayersByWin;
+    
+    emitStatisticsChanges();
 }
 
 const getTotalAnsweredQuestions = async () => {
@@ -152,5 +155,7 @@ const getTotalAnsweredQuestions = async () => {
     const totalAnsweredQuestions = matches.reduce((previous, current) => previous += current.last_questions.split(',').length, 0);
     
     statistics[StatisticsType.TOTAL_ANSWERED] = totalAnsweredQuestions;
+    
+    emitStatisticsChanges();
 }
 
