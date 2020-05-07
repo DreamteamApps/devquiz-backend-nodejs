@@ -68,13 +68,11 @@ module.exports.setStatisticsObject = async (key, object) => {
     emitStatisticsChanges();
 }
 
-
 /**
  * Emits recent played to all connected clients when a client connect
 */
 module.exports.refreshTop10PlayersByWin = async () => {
-    getTop10PlayersByWin();
-    emitStatisticsChanges();
+    await getTop10PlayersByWin();
 }
 
 /**
@@ -82,7 +80,7 @@ module.exports.refreshTop10PlayersByWin = async () => {
 */
 const emitStatisticsChanges = async () => {
     const dateNowInMS = Date.now();
-    const secondsInMS = 1000 * 20;
+    const secondsInMS = 1000 * 5;
     const lastEmitDiffFromNowInMS = dateNowInMS - lastStatisticsChangeEmit;
 
     Log.devLog(`Emited statistics changed called!`)
@@ -92,12 +90,12 @@ const emitStatisticsChanges = async () => {
     }
 
     statisticsChangeEmitDebounceTimeout = setTimeout(() => {
-        lastStatisticsChangeEmit = Date.now();
+        lastStatisticsChangeEmit = dateNowInMS;
 
         Socket.client.to('statistics').emit(SocketEvents.STATISTICS_UPDATE, statistics);
 
         Log.devLog(`Emited ${SocketEvents.STATISTICS_UPDATE} to statistics!`)
-    }, 5000);
+    }, 2000);
 }
 
 /**

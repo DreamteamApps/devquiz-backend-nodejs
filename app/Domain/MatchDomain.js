@@ -567,10 +567,10 @@ const endMatch = async (room, matchId) => {
     }
   });
   
+  await Time.waitMS(TIME_BEFORE_MATCH_PLAY_AGAIN);
+
   StatisticsDomain.refreshTop10PlayersByWin();
   StatisticsDomain.decreaseStatisticsValue(StatisticsType.TOTAL_MATCHES_NOW);
-
-  await Time.waitMS(TIME_BEFORE_MATCH_PLAY_AGAIN);
 
   playAgain(room, matchId);
 }
