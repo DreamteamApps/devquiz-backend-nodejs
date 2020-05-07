@@ -5,6 +5,17 @@
 const Database = use('Database')
 const Question = use("App/Models/Question")
 
+/**
+ * Domain
+ * 
+*/
+const StatisticsDomain = use('App/Domain/StatisticsDomain')
+
+/**
+ * General
+ * 
+*/
+const StatisticsType = use('App/Enum/StatisticsType')
 
 /**
  * Get all questions paginated and sorted
@@ -25,6 +36,8 @@ module.exports.getAll = async (page, perPage, sortBy, sort) => {
  * @param {object} question
 */
 module.exports.create = async (question) => {
+    StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_QUESTIONS);
+    
     const created = await Question.create(question)
     return created;
 }

@@ -6,12 +6,18 @@ const Database = use('Database')
 const User = use("App/Models/User")
 
 /**
+ * Domain
+ * 
+*/
+const StatisticsDomain = use('App/Domain/StatisticsDomain')
+
+/**
  * General
  * 
 */
 const GitHub = use("App/Infrastructure/Github")
 const UserType = use('App/Enum/UserType')
-
+const StatisticsType = use('App/Enum/StatisticsType')
 
 /**
  * Gets a user in github, create it or update in our database and return it
@@ -29,10 +35,10 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
             "message": "This user doesn't exists!"
         }
     }
-
-    
     
     if (!existingUser) {
+        StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_PLAYERS);
+
         await User.create({
             username: login,
             name: name || login

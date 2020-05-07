@@ -55,6 +55,7 @@ module.exports.clientConnect = async (room) => {
   if (recentPlayers) {
 
     StatisticsDomain.setStatisticsObject(StatisticsType.RECENT_PLAYERS, recentPlayers);
+    StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_PLAYERS_NOW);
     
     room.emitToMatchToAll(SocketEvents.SERVER_RECENT_PLAYED, recentPlayers);
   }
@@ -242,6 +243,8 @@ module.exports.joinMatchWithCode = async (matchCode, userId) => {
  * @param {integer} time
 */
 module.exports.answerQuestion = async (userId, matchId, questionId, answer, time) => {
+  
+  StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_ANSWERED);
 
   const [match, question] = await Promise.all([module.exports.getMatchById(matchId), QuestionDomain.getById(questionId)]);
 
@@ -305,6 +308,8 @@ module.exports.disconnectUserFromMatch = async (room) => {
   }
 
   room.leaveMatch();
+
+  StatisticsDomain.decreaseStatisticsValue(StatisticsType.TOTAL_PLAYERS_NOW);
 }
 
 /**
@@ -350,6 +355,8 @@ module.exports.getMatchById = async (matchId) => {
  * @param {integer} matchId
 */
 const startMatch = async (room, matchId) => {
+  StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_MATCHES_NOW);
+
   room.emitToMatch(SocketEvents.SERVER_MATCH_START);
 
   await Time.waitMS(TIME_BEFORE_START_FIRST_ROUND);
@@ -559,6 +566,9 @@ const endMatch = async (room, matchId) => {
       disconnected: match.opponent_disconnected,
     }
   });
+  
+  StatisticsDomain.refreshTop10PlayersByWin();
+  StatisticsDomain.decreaseStatisticsValue(StatisticsType.TOTAL_MATCHES_NOW);
 
   await Time.waitMS(TIME_BEFORE_MATCH_PLAY_AGAIN);
 
@@ -601,4 +611,5 @@ const playAgain = async (room, matchId) => {
   }
 
   room.leaveMatch();
+  
 }
