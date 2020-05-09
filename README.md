@@ -15,7 +15,7 @@
 
 
 # Match sequence diagram
-![Match sequence diagram](https://raw.githubusercontent.com/erickcouto/devquiz/master/backend/SequenceDiagram.png)
+![Match sequence diagram](https://raw.githubusercontent.com/DreamteamApps/devquiz-backend-nodejs/master/SequenceDiagram.png)
 
 # Socket events
 ### (client) join-match

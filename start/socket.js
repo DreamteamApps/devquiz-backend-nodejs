@@ -2,16 +2,16 @@
  * Server
  * 
 */
-const env = use('Env')
 const Server = use('Server')
-const socketClient = use('socket.io')(Server.getInstance(), { pingInterval: 2000, pingTimeout: 10000 });
+let socketClient;
+socketClient = socketClient || use('socket.io')(Server.getInstance(), { pingInterval: 2000, pingTimeout: 10000 });
 
 /**
  * Domains
  * 
 */
 const MatchDomain = use('App/Domain/MatchDomain')
-const UserDomain = use('App/Domain/UserDomain')
+const StatisticsDomain = use('App/Domain/StatisticsDomain')
 
 /**
  * General
@@ -21,8 +21,10 @@ const SocketEvents = use('App/Enum/SocketEvents')
 const Socket = use("App/Helpers/Socket")
 
 socketClient.on('connection', async (connection) => {
-    const room = await Socket.createRoom(socketClient, connection);
+    const room = await Socket.createConnection(socketClient, connection);
 
+    room.on(SocketEvents.STATISTICS_CLIENT_CONNECT, () => StatisticsDomain.clientConnect(room));
+    
     room.on(SocketEvents.CLIENT_CONNECT, () => MatchDomain.clientConnect(room));
 
     room.on(SocketEvents.CLIENT_EVENT_JOIN_MATCH, ({ matchId, userId }) => MatchDomain.joinMatch(room, matchId, userId));
@@ -37,3 +39,5 @@ socketClient.on('connection', async (connection) => {
 
     room.on(SocketEvents.CLIENT_DISCONNECT, () => MatchDomain.disconnectUserFromMatch(room));
 });
+
+exports.client = socketClient

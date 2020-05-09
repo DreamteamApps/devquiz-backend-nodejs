@@ -6,12 +6,18 @@ const Database = use('Database')
 const User = use("App/Models/User")
 
 /**
+ * Domain
+ * 
+*/
+const StatisticsDomain = use('App/Domain/StatisticsDomain')
+
+/**
  * General
  * 
 */
 const GitHub = use("App/Infrastructure/Github")
 const UserType = use('App/Enum/UserType')
-
+const StatisticsType = use('App/Enum/StatisticsType')
 
 /**
  * Gets a user in github, create it or update in our database and return it
@@ -29,43 +35,34 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
             "message": "This user doesn't exists!"
         }
     }
-
-    if (pushToken) {
-        const userWithThisPushToken = await User.findBy('push_token', pushToken);
-        if (userWithThisPushToken) {
-            userWithThisPushToken.merge({
-                push_token: null
-            });
-            await userWithThisPushToken.save();
-        }
-    }
-
+    
     if (!existingUser) {
+        StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_PLAYERS);
+
         await User.create({
             username: login,
-            name: name || login,
-            repos_quantity: public_repos,
-            image_url: avatar_url,
-            push_token: pushToken,
-            github_etag: etag
+            name: name || login
         });
 
         existingUser = await User.findBy('username', login);
-    } else {
-        if (login) {
-            existingUser.merge({
-                repos_quantity: public_repos,
-                image_url: avatar_url,
-                github_etag: etag
-            });
-        }
+    }
 
+    existingUser.merge({
+        push_token: pushToken
+    });
+
+    if (login) {
         existingUser.merge({
-            push_token: pushToken,
-            updated_at: new Date()
+            repos_quantity: public_repos,
+            image_url: avatar_url,
+            github_etag: etag
         });
+    }
 
-        await existingUser.save();
+    await existingUser.save();
+
+    if (pushToken) {
+        await User.query().where('push_token', pushToken).whereNot('id', existingUser.id).update({ push_token: null })
     }
 
     return {
