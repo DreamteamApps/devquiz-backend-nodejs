@@ -137,8 +137,14 @@ module.exports.getRecentUsers = async () => {
     return users.map((user) => {
         return {
             id: user.id,
-            name: user.username,
-            avatar: user.image_url
+            login: user.username,
+            name: user.name,
+            avatar: user.image_url,
+            repos: user.repos_quantity,
+            score: user.score,
+            wins: user.wins,
+            losses: user.losses,
+            ties: user.ties
         }
     });
 }
