@@ -21,6 +21,7 @@ class UserSchema extends Schema {
       table.string('email', 254).unique()
       table.string('password', 60)
       table.string('type', 254).defaultTo('user')
+      table.date('last_login')
       table.timestamps()
     })
   }

@@ -96,7 +96,7 @@ module.exports.removePushTokenFromOtherUsers = async (pushToken, userId) => {
  *
 */
 module.exports.getRecentPlayers = async () => {
-    const recentPlayers = await Database.table('users').where('type', UserType.USER).orderBy('updated_at', 'desc').limit(10);
+    const recentPlayers = await Database.table('users').where('type', UserType.USER).orderBy('last_login', 'desc').limit(10);
     return recentPlayers;
 }
 

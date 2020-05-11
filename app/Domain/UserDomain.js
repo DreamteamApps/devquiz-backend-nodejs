@@ -45,7 +45,8 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
     }
 
     existingUser.push_token = pushToken;
-
+    existingUser.last_login = new Date();
+    
     if (login) {
         existingUser.repos_quantity = public_repos;
         existingUser.image_url = avatar_url;
