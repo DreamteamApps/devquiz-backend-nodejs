@@ -6,17 +6,11 @@ const Server = use('Server')
 let socketClient;
 socketClient = socketClient || use('socket.io')(Server.getInstance(), { pingInterval: 2000, pingTimeout: 10000 });
 
-/**
- * Domains
- * 
-*/
+/** Domains **/
 const MatchDomain = use('App/Domain/MatchDomain')
 const StatisticsDomain = use('App/Domain/StatisticsDomain')
 
-/**
- * General
- * 
-*/
+/** General **/
 const SocketEvents = use('App/Enum/SocketEvents')
 const Socket = use("App/Helpers/Socket")
 

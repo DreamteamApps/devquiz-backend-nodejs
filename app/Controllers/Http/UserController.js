@@ -1,6 +1,12 @@
 'use strict'
 
+/**
+ * Domain
+ * 
+*/
 const UserDomain = use('App/Domain/UserDomain')
+
+/** Enum **/
 const UserType = use('App/Enum/UserType')
 
 class UserController {

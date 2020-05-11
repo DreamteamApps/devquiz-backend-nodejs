@@ -1,9 +1,6 @@
 'use strict'
 
-/**
- * Domains
- * 
-*/
+/** Domains **/
 const ThemeDomain = use('App/Domain/ThemeDomain')
 
 /**

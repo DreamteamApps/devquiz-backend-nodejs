@@ -1,34 +1,26 @@
-/**
- * Models
- * 
-*/
+/** Models **/
 const Database = use('Database')
 const Match = use("App/Models/Match")
 
-/**
- * Domains
- * 
-*/
+/** Domains **/
 const UserDomain = use('App/Domain/UserDomain')
 const QuestionDomain = use('App/Domain/QuestionDomain')
 const StatisticsDomain = use('App/Domain/StatisticsDomain')
 
-/**
- * General
- * 
-*/
-const Onesignal = use("App/Infrastructure/Onesignal")
-const CodeGenerator = use("App/Helpers/CodeGenerator")
-const Time = use("App/Helpers/Time")
+/** DTO **/
+const DTOMatch = use('App/DTO/DTOMatch')
+
+/** Enum **/
 const SocketEvents = use('App/Enum/SocketEvents')
 const MatchStatus = use('App/Enum/MatchStatus')
 const StatisticsType = use('App/Enum/StatisticsType')
 
+/** General **/
+const Onesignal = use("App/Infrastructure/Onesignal")
+const CodeGenerator = use("App/Helpers/CodeGenerator")
+const Time = use("App/Helpers/Time")
 
-/**
- * Constants
- * All times are in MS
-*/
+/** Constants - All times are in MS **/
 const TOTAL_ROUNDS = 3;
 const ROUND_COUNTDOWN_TIME = 10;
 
@@ -41,11 +33,6 @@ const TIME_BEFORE_NEW_ROUND = 3000;
 const TIME_BEFORE_MATCH_PLAY_AGAIN = 3000;
 const MATCH_PLAY_AGAIN_COUNTDOWN_TIME = 5;
 
-/**
- * 
- * PUBLICS
- * 
-*/
 
 /**
  * Emits recent played to all connected clients when a client connect
@@ -341,12 +328,6 @@ module.exports.getMatchById = async (matchId) => {
 
 
 
-
-/**
- * 
- * PRIVATES
- * 
-*/
 
 /**
  * Starts a match and play the first round

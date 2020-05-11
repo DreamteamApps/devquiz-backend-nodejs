@@ -1,7 +1,4 @@
-/**
- * General
- * 
-*/
+/** General **/
 const Log = use("App/Helpers/Log")
 
 const connections = {};

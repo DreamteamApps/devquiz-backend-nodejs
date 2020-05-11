@@ -1,9 +1,8 @@
 /**
- * Models
+ * Repository
  * 
 */
-const Database = use('Database')
-const User = use("App/Models/User")
+const UserRepository = use('App/Repository/UserRepository')
 
 /**
  * Domain
@@ -11,21 +10,21 @@ const User = use("App/Models/User")
 */
 const StatisticsDomain = use('App/Domain/StatisticsDomain')
 
-/**
- * General
- * 
-*/
+/** DTO **/
+const DTOUser = use('App/DTO/DTOUser')
+
+/** General **/
 const GitHub = use("App/Infrastructure/Github")
-const UserType = use('App/Enum/UserType')
 const StatisticsType = use('App/Enum/StatisticsType')
 
 /**
  * Gets a user in github, create it or update in our database and return it
  *
  * @param {string} githubUser
+ * @param {string} pushToken
 */
 module.exports.getOrCreateUser = async (githubUser, pushToken) => {
-    let existingUser = await User.findBy('username', githubUser);
+    let existingUser = await UserRepository.getUserByUsername(githubUser);
 
     const { login, name, public_repos, avatar_url, etag } = await GitHub.getUserInformation(githubUser, existingUser && existingUser.github_etag);
 
@@ -39,43 +38,29 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
     if (!existingUser) {
         StatisticsDomain.increaseStatisticsValue(StatisticsType.TOTAL_PLAYERS);
 
-        await User.create({
+        existingUser = await UserRepository.create({
             username: login,
             name: name || login
         });
-
-        existingUser = await User.findBy('username', login);
     }
 
-    existingUser.merge({
-        push_token: pushToken
-    });
+    existingUser.push_token = pushToken;
 
     if (login) {
-        existingUser.merge({
-            repos_quantity: public_repos,
-            image_url: avatar_url,
-            github_etag: etag
-        });
+        existingUser.repos_quantity = public_repos;
+        existingUser.image_url = avatar_url;
+        existingUser.github_etag = etag;
     }
 
-    await existingUser.save();
+    await UserRepository.update(existingUser);
 
     if (pushToken) {
-        await User.query().where('push_token', pushToken).whereNot('id', existingUser.id).update({ push_token: null })
+        await UserRepository.removePushTokenFromOtherUsers(pushToken, existingUser.id);
     }
 
-    return {
-        id: existingUser.id,
-        login: existingUser.username,
-        name: existingUser.name,
-        avatar: existingUser.image_url,
-        repos: existingUser.repos_quantity,
-        score: existingUser.score,
-        wins: existingUser.wins,
-        losses: existingUser.losses,
-        ties: existingUser.ties
-    }
+    const dtoUser = new DTOUser(existingUser);
+
+    return dtoUser;
 }
 
 /**
@@ -85,13 +70,10 @@ module.exports.getOrCreateUser = async (githubUser, pushToken) => {
  * @param {string} socketId
 */
 module.exports.setUserSocketId = async (userId, socketId) => {
-    const user = await User.findBy('id', userId);
-
-    user.merge({
+    await UserRepository.update({
+        id: userId,
         socket_id: socketId
     });
-
-    user.save();
 }
 
 /**
@@ -100,8 +82,11 @@ module.exports.setUserSocketId = async (userId, socketId) => {
  * @param {string} userId
 */
 module.exports.getUserById = async (userId) => {
-    const user = await User.findBy('id', userId);
-    return user;
+    const user = await UserRepository.getUserById(userId);
+
+    const dtoUser = new DTOUser(user);
+
+    return dtoUser;
 }
 
 /**
@@ -110,8 +95,11 @@ module.exports.getUserById = async (userId) => {
  * @param {string} email
 */
 module.exports.getUserByEmail = async (email) => {
-    const user = await User.findBy('email', email);
-    return user;
+    const user = await UserRepository.getUserByEmail(email);
+
+    const dtoUser = new DTOUser(user);
+
+    return dtoUser;
 }
 
 /**
@@ -120,8 +108,11 @@ module.exports.getUserByEmail = async (email) => {
  * @param {string} socketId
 */
 module.exports.getUserBySocketId = async (socketId) => {
-    const user = await User.findBy('socket_id', socketId);
-    return user;
+    const user = await UserRepository.getUserBySocketId(socketId);
+
+    const dtoUser = new DTOUser(user);
+
+    return dtoUser;
 }
 
 /**
@@ -129,13 +120,9 @@ module.exports.getUserBySocketId = async (socketId) => {
  *
 */
 module.exports.getRecentUsers = async () => {
-    const users = await Database.table('users').where('type', UserType.USER).orderBy('updated_at', 'desc').limit(10);
+    const recentPlayers = await UserRepository.getRecentPlayers();
 
-    return users.map((user) => {
-        return {
-            id: user.id,
-            name: user.username,
-            avatar: user.image_url
-        }
-    });
+    const result = recentPlayers.map(player => new DTOUser(player));
+
+    return result;
 }

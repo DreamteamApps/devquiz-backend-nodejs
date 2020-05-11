@@ -1,18 +1,22 @@
-const Socket = require('../../start/socket');
 /**
- * Models
+ * Repository
  * 
 */
+const UserRepository = use('App/Repository/UserRepository')
+
+/** Models **/
 const Database = use('Database')
 
-/**
- * General
- * 
-*/
+/** Enum **/
 const SocketEvents = use('App/Enum/SocketEvents')
 const MatchStatus = use('App/Enum/MatchStatus')
 const StatisticsType = use('App/Enum/StatisticsType')
-const UserType = use('App/Enum/UserType')
+
+/** DTO **/
+const DTOUser = use('App/DTO/DTOUser')
+
+/** General **/
+const Socket = require('../../start/socket');
 const Log = use("App/Helpers/Log")
 
 let statistics;
@@ -20,18 +24,18 @@ let lastStatisticsChangeEmit = 0;
 let statisticsChangeEmitDebounceTimeout = 0;
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * On statistics client connects emits latest statistics to self
 */
 module.exports.clientConnect = async (room) => {
     room.subscribeStatistics();
 
-    const latestStatistics = await getLatestStatistics();
+    await getLatestStatistics();
 
-    room.emitToSelf(SocketEvents.STATISTICS_UPDATE, latestStatistics);
+    room.emitToSelf(SocketEvents.STATISTICS_UPDATE, statistics);
 }
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * Increase a statistics value and emit this change
 */
 module.exports.increaseStatisticsValue = async (key) => {
     let value = statistics[key] || 0;
@@ -44,7 +48,7 @@ module.exports.increaseStatisticsValue = async (key) => {
 }
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * Decrease a statistics value and emit this change
 */
 module.exports.decreaseStatisticsValue = async (key) => {
     let value = statistics[key] || 0;
@@ -60,7 +64,7 @@ module.exports.decreaseStatisticsValue = async (key) => {
 
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * Sets a statistics object and emit this change
 */
 module.exports.setStatisticsObject = async (key, object) => {
     statistics[key] = object;
@@ -69,23 +73,21 @@ module.exports.setStatisticsObject = async (key, object) => {
 }
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * Fetch and emit a new list of Top 10 players by win
 */
 module.exports.refreshTop10PlayersByWin = async () => {
     await getTop10PlayersByWin();
 }
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * Emits statistics changes to all clients connected to statistics room, it has a debounce and a max time without update limiter
 */
 const emitStatisticsChanges = async () => {
     const dateNowInMS = Date.now();
-    const secondsInMS = 1000 * 5;
-    const lastEmitDiffFromNowInMS = dateNowInMS - lastStatisticsChangeEmit;
 
     Log.devLog(`Emited statistics changed called!`)
 
-    if (lastEmitDiffFromNowInMS < secondsInMS) {
+    if ((dateNowInMS - lastStatisticsChangeEmit) < 5000) {
         clearTimeout(statisticsChangeEmitDebounceTimeout);
     }
 
@@ -99,61 +101,77 @@ const emitStatisticsChanges = async () => {
 }
 
 /**
- * Emits recent played to all connected clients when a client connect
+ * Initiate and refresh statistics data
 */
 const getLatestStatistics = async () => {
-    if (!statistics) {
-        await prepareInitialData();
-    }
+    statistics = statistics || {};
 
-    return statistics;
+    statistics = {
+        [StatisticsType.TOTAL_PLAYERS_NOW]: Socket.client.engine.clientsCount
+    };
+
+    const totalMatchesPromise = Database.from('matches').getCount().then((totalMatches) => {
+        statistics[StatisticsType.TOTAL_MATCHES] = totalMatches;
+    });
+
+    const totalMatchesNowPromise = await Database.from('matches').whereRaw(`status = '${MatchStatus.PLAYING}'`).getCount().then((totalMatchesNow) => {
+        statistics[StatisticsType.TOTAL_MATCHES_NOW] = totalMatchesNow;
+    });
+
+    const totalPlayersPromise = await Database.from('users').getCount().then((totalPlayers) => {
+        statistics[StatisticsType.TOTAL_PLAYERS] = totalPlayers;
+    });
+
+    const totalQuestionsPromise = await Database.from('questions').getCount().then((totalQuestions) => {
+        statistics[StatisticsType.TOTAL_QUESTIONS] = totalQuestions;
+    });
+
+    await Promise.all([totalMatchesPromise,
+        totalMatchesNowPromise,
+        totalPlayersPromise,
+        totalQuestionsPromise,
+        getTop10PlayersByWin(),
+        getRecentPlayers(),
+        getTotalAnsweredQuestions(),
+    ]);
 }
 
-const prepareInitialData = async () => {
-    statistics = {};
+/**
+ * Get recent players
+*/
+const getRecentPlayers = async () => {
+    const recentPlayers = await UserRepository.getRecentPlayers();
 
-    const totalMatches = await Database.from('matches').getCount();
-    statistics[StatisticsType.TOTAL_MATCHES] = totalMatches;
+    const result = recentPlayers.map(player => new DTOUser(player));
 
-    const totalMatchesNow = await Database.from('matches').whereRaw(`status = '${MatchStatus.PLAYING}'`).getCount();
-    statistics[StatisticsType.TOTAL_MATCHES_NOW] = totalMatchesNow;
+    statistics[StatisticsType.RECENT_PLAYERS] = result;
 
-    const totalPlayers = await Database.from('users').getCount();
-    statistics[StatisticsType.TOTAL_PLAYERS] = totalPlayers;
-
-    const totalPlayersNow = Socket.client.engine.clientsCount;
-    statistics[StatisticsType.TOTAL_PLAYERS_NOW] = totalPlayersNow;
-
-    const totalQuestions = await Database.from('questions').getCount();
-    statistics[StatisticsType.TOTAL_QUESTIONS] = totalQuestions;
-
-    const recentPlayers = await Database.table('users').where('type', UserType.USER).orderBy('updated_at', 'desc').limit(10);
-    statistics[StatisticsType.RECENT_PLAYERS] = recentPlayers.map(p => ({
-        id: p.id,
-        name: p.username,
-        avatar: p.image_url
-    }));
-
-    await getTotalAnsweredQuestions();
-
-    await getTop10PlayersByWin();
-}
-
-const getTop10PlayersByWin = async () => {
-    const top10PlayersByWin = await Database.table('users').where('type', UserType.USER).where('wins', '>', 0).orderBy('wins', 'desc').limit(10);
-    
-    statistics[StatisticsType.TOP_10PLAYERS_BY_WIN] = top10PlayersByWin;
-    
     emitStatisticsChanges();
 }
 
+/**
+ * Get the top 10 users by win
+*/
+const getTop10PlayersByWin = async () => {
+    const top10UsersByWin = await UserRepository.getTop10UsersByWin();
+    
+    const result = top10UsersByWin.map(player => new DTOUser(player));
+    
+    statistics[StatisticsType.TOP_10PLAYERS_BY_WIN] = result;
+
+    emitStatisticsChanges();
+}
+
+/**
+ * Get the total question answers
+*/
 const getTotalAnsweredQuestions = async () => {
     const matches = await Database.table('matches').whereNot('last_questions', '');
 
     const totalAnsweredQuestions = matches.reduce((previous, current) => previous += current.last_questions.split(',').length, 0);
-    
+
     statistics[StatisticsType.TOTAL_ANSWERED] = totalAnsweredQuestions;
-    
+
     emitStatisticsChanges();
 }
 

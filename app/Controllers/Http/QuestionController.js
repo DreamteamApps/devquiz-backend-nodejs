@@ -1,9 +1,6 @@
 'use strict'
 
-/**
- * Domains
- * 
-*/
+/** Domains **/
 const QuestionDomain = use('App/Domain/QuestionDomain')
 
 class QuestionController {

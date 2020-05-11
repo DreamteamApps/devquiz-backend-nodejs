@@ -1,7 +1,4 @@
-/**
- * Models
- * 
-*/
+/** Models **/
 const Database = use('Database')
 const Question = use("App/Models/Question")
 
@@ -11,10 +8,7 @@ const Question = use("App/Models/Question")
 */
 const StatisticsDomain = use('App/Domain/StatisticsDomain')
 
-/**
- * General
- * 
-*/
+/** General **/
 const StatisticsType = use('App/Enum/StatisticsType')
 
 /**

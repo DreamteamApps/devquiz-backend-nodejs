@@ -1,7 +1,4 @@
-/**
- * Models
- * 
-*/
+/** Models **/
 const Database = use('Database')
 const Theme = use("App/Models/Theme")
 
